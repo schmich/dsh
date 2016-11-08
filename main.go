@@ -197,22 +197,11 @@ func selectContainer(docker string) *Container {
   return container
 }
 
-func main() {
-  docker, err := exec.LookPath("docker")
-	if err != nil {
-    fmt.Println("'docker' not found.")
-    return
-	}
-
-  var container *Container
-  if container = selectContainer(docker); container == nil {
-    return
-  }
-
+func selectShell(container *Container, docker string) string {
   shells, err := findShells(container, docker)
   if err != nil {
     fmt.Printf("Could not find shell for %s.\n", container.Id)
-    return
+    return ""
   }
 
   prios := map[string]int {
@@ -232,6 +221,26 @@ func main() {
       max = prio
       shell = shellPath
     }
+  }
+
+  return shell
+}
+
+func main() {
+  docker, err := exec.LookPath("docker")
+	if err != nil {
+    fmt.Println("'docker' not found.")
+    return
+	}
+
+  var container *Container
+  if container = selectContainer(docker); container == nil {
+    return
+  }
+
+  var shell string
+  if shell = selectShell(container, docker); shell == "" {
+    return
   }
 
   fmt.Printf("Running %s in %s (%s).\n", shell, container.Name, container.Id)
