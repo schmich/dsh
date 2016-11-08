@@ -222,12 +222,7 @@ func findShells(container *Container, docker string) ([]string, error) {
   return shells, nil
 }
 
-func selectContainer(docker string) *Container {
-  var query string
-  if len(os.Args) >= 2 {
-    query = os.Args[1]
-  }
-
+func selectContainer(query, docker string) *Container {
   var containers []*Container
   if query == "" {
     containers = runningContainers(docker)
@@ -292,7 +287,20 @@ func selectShell(container *Container, docker string) string {
   return shell
 }
 
+var version string
+var commit string
+
 func main() {
+  var query string
+  if len(os.Args) >= 2 {
+    query = os.Args[1]
+  }
+
+  if query == "-v" || query == "--version" {
+    fmt.Println("dsh", version, commit)
+    return
+  }
+
   docker, err := exec.LookPath("docker")
   if err != nil {
     fmt.Println("'docker' not found.")
@@ -300,7 +308,7 @@ func main() {
   }
 
   var container *Container
-  if container = selectContainer(docker); container == nil {
+  if container = selectContainer(query, docker); container == nil {
     return
   }
 
