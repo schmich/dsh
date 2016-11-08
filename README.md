@@ -50,7 +50,7 @@ You can also search by container ID. If only one container is found, a shell is 
 ```
 $ dsh 870
 Running /bin/bash in myapp_solr_1 (87077551c652).
-bash-4.3$
+bash-4.3$ _
 ```
 
 ## License
