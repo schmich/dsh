@@ -9,6 +9,7 @@ import (
   "fmt"
   "strconv"
   "path"
+  "sort"
 )
 
 type Container struct {
@@ -73,32 +74,53 @@ func readInput(prompt string) (string, error) {
   return reader.ReadString('\n')
 }
 
-func readIndex(low, high int, prompt string) (int, error) {
+func readChoice(choices []string, prompt string) (string, error) {
   for {
     input, err := readInput(prompt)
     if err != nil {
-      return 0, err
+      return "", err
     }
 
-    input = strings.TrimSpace(input)
-    index, err := strconv.Atoi(input)
-    if (err != nil) || (index < low) || (index > high) {
+    valid := false
+    input = strings.ToLower(strings.TrimSpace(input))
+    for _, choice := range choices {
+      if input == choice {
+        valid = true
+        break
+      }
+    }
+ 
+    if !valid {
       fmt.Printf("Invalid choice.\n")
     } else {
-      return index, nil
+      return input, nil
     }
   }
 }
 
 func chooseContainer(containers []*Container) (*Container, error) {
+  choices := make(map[string]*Container, len(containers))
+
   for i, container := range containers {
-    fmt.Printf("%d. %s %s %s\n", i + 1, container.Id, container.Image, container.Name)
+    input := strconv.FormatInt(int64(i + 1), 36)
+    choices[input] = container
   }
 
-  if index, err := readIndex(1, len(containers), "> "); err != nil {
+  var keys []string
+  for k := range choices {
+    keys = append(keys, k)
+  }
+  sort.Strings(keys)
+
+  for _, key := range keys {
+    container := choices[key]
+    fmt.Printf("%s. %s %s %s\n", key, container.Id, container.Image, container.Name)
+  }
+
+  if choice, err := readChoice(keys, "> "); err != nil {
     return nil, err
   } else {
-    return containers[index - 1], nil
+    return choices[choice], nil
   }
 }
 
