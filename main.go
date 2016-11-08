@@ -267,21 +267,24 @@ func selectShell(container *Container, docker string) string {
     return ""
   }
 
-  prios := map[string]int {
-    "zsh": 3,
-    "bash": 2,
-    "ksh": 1,
-    "sh": -1,
+  ranks := map[string]int {
+    "zsh": 4,
+    "bash": 3,
+    "csh": 2,
+    "tcsh": 2,
+    "ksh": 2,
+    "pdksh": 2,
+    "fish": 2,
+    "ash": 1,
+    "sh": 0,
   }
 
   max := -2 
   shell := ""
   for _, shellPath := range shells {
     name := path.Base(shellPath)
-
-    prio := prios[name]
-    if prio > max {
-      max = prio
+    if rank, found := ranks[name]; found && rank > max {
+      max = rank
       shell = shellPath
     }
   }
