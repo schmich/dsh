@@ -238,10 +238,10 @@ func selectContainer(docker string) *Container {
   } else {
     containers = findContainers(query, docker)
     if len(containers) == 0 {
-      fmt.Printf("Could not find container matching '%s'.", query)
+      fmt.Printf("Could not find any containers matching '%s'.", query)
       return nil
     } else if len(containers) > 1 {
-      fmt.Printf("Multiple containers found for '%s'.\n", query)
+      fmt.Printf("Multiple containers found for '%s':\n", query)
     }
   }
 
