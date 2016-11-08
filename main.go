@@ -159,30 +159,24 @@ func findShells(container *Container, docker string) ([]string, error) {
   return shells, nil
 }
 
-func main() {
+func selectContainer(docker string) *Container {
   var query string
   if len(os.Args) >= 2 {
     query = os.Args[1]
   }
-
-  docker, err := exec.LookPath("docker")
-	if err != nil {
-    fmt.Println("'docker' not found.")
-    return
-	}
 
   var containers []*Container
   if query == "" {
     containers = runningContainers(docker)
     if len(containers) == 0 {
       fmt.Printf("There are no running containers.")
-      return
+      return nil
     }
   } else {
     containers = findContainers(query, docker)
     if len(containers) == 0 {
       fmt.Printf("Could not find container matching '%s'.", query)
-      return
+      return nil
     } else if len(containers) > 1 {
       fmt.Printf("Multiple containers found for '%s'.\n", query)
     }
@@ -192,12 +186,27 @@ func main() {
   if len(containers) == 1 {
     container = containers[0]
   } else {
-    container, err = chooseContainer(containers)
-    if err != nil {
-      return
+    var err error
+    if container, err = chooseContainer(containers); err != nil {
+      return nil
     }
 
     fmt.Println()
+  }
+
+  return container
+}
+
+func main() {
+  docker, err := exec.LookPath("docker")
+	if err != nil {
+    fmt.Println("'docker' not found.")
+    return
+	}
+
+  var container *Container
+  if container = selectContainer(docker); container == nil {
+    return
   }
 
   shells, err := findShells(container, docker)
