@@ -8,6 +8,7 @@ import (
   "bufio"
   "fmt"
   "strconv"
+  "path"
 )
 
 type Container struct {
@@ -134,6 +135,30 @@ func runCommand(container *Container, docker, command string) error {
   return cmd.Run()
 }
 
+func findShells(container *Container, docker string) ([]string, error) {
+  var buf bytes.Buffer
+  cmd := exec.Command(docker, "exec", container.Id, "cat", "/etc/shells")
+  cmd.Stdout = &buf
+  err := cmd.Run()
+
+  if err != nil {
+    return []string{}, err
+  }
+
+  output := buf.String()
+  lines := strings.Split(strings.TrimSpace(output), "\n")
+
+  var shells []string
+  for _, line := range lines {
+    line = strings.TrimSpace(line)
+    if path.IsAbs(line) {
+      shells = append(shells, line)
+    }
+  }
+
+  return shells, nil
+}
+
 func main() {
   var query string
   if len(os.Args) >= 2 {
@@ -175,17 +200,29 @@ func main() {
     fmt.Println()
   }
 
-  var shell string
-  var found bool
-  if shell, found = findCommand(container, docker, "zsh"); !found {
-    if shell, found = findCommand(container, docker, "bash"); !found {
-      shell, found = findCommand(container, docker, "sh")
-    }
-  }
-
-  if !found {
+  shells, err := findShells(container, docker)
+  if err != nil {
     fmt.Printf("Could not find shell for %s.\n", container.Id)
     return
+  }
+
+  prios := map[string]int {
+    "zsh": 4,
+    "bash": 3,
+    "ksh": 2,
+    "sh": 1,
+  }
+
+  max := 0
+  shell := ""
+  for _, shellPath := range shells {
+    name := path.Base(shellPath)
+
+    prio := prios[name]
+    if prio > max {
+      max = prio
+      shell = shellPath
+    }
   }
 
   fmt.Printf("Running %s in %s (%s).\n", shell, container.Name, container.Id)
