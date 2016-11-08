@@ -98,9 +98,39 @@ func readChoice(choices []string, prompt string) (string, error) {
   }
 }
 
-func chooseContainer(containers []*Container) (*Container, error) {
-  choices := make(map[string]*Container, len(containers))
+func max(x, y int) int {
+  if x > y {
+    return x
+  }
+  return y
+}
 
+func printTable(table [][]string) {
+  if len(table) == 0 {
+    return
+  }
+
+  widths := make([]int, len(table[0]))
+  for _, row := range table {
+    for i, col := range row {
+      widths[i] = max(widths[i], len(col))
+    }
+  }
+
+  for _, row := range table {
+    for i, col := range row {
+      spaces := widths[i] - len(col) + 2
+      fmt.Print(col)
+      for j := 0; j < spaces; j++ {
+        fmt.Print(" ")
+      }
+    }
+    fmt.Print("\n")
+  }
+}
+
+func chooseContainer(containers []*Container) (*Container, error) {
+  choices := make(map[string]*Container)
   for i, container := range containers {
     input := strconv.FormatInt(int64(i + 1), 36)
     choices[input] = container
@@ -112,10 +142,21 @@ func chooseContainer(containers []*Container) (*Container, error) {
   }
   sort.Strings(keys)
 
+  var table [][]string
   for _, key := range keys {
     container := choices[key]
-    fmt.Printf("%s. %s %s %s\n", key, container.Id, container.Image, container.Name)
+
+    row := []string{
+      key,
+      container.Name,
+      container.Id,
+      container.Image,
+    }
+
+    table = append(table, row)
   }
+
+  printTable(table)
 
   if choice, err := readChoice(keys, "> "); err != nil {
     return nil, err
@@ -227,13 +268,13 @@ func selectShell(container *Container, docker string) string {
   }
 
   prios := map[string]int {
-    "zsh": 4,
-    "bash": 3,
-    "ksh": 2,
-    "sh": 1,
+    "zsh": 3,
+    "bash": 2,
+    "ksh": 1,
+    "sh": -1,
   }
 
-  max := 0
+  max := -2 
   shell := ""
   for _, shellPath := range shells {
     name := path.Base(shellPath)
