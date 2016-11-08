@@ -228,10 +228,10 @@ func selectShell(container *Container, docker string) string {
 
 func main() {
   docker, err := exec.LookPath("docker")
-	if err != nil {
+  if err != nil {
     fmt.Println("'docker' not found.")
     return
-	}
+  }
 
   var container *Container
   if container = selectContainer(docker); container == nil {
