@@ -9,7 +9,7 @@ Hassle-free Docker container shells.
 ## Usage
 
 `dsh` simplifies `docker exec -it <container> sh`. It automatically determines the available
-shells in a container and chooses the best one (e.g. `bash` > `sh`).
+shells in a container and chooses the best one (e.g. `bash` > `ksh` > `sh`).
 
 Run `dsh` by itself to get a list of running containers:
 
